@@ -1,3 +1,11 @@
 # If you unzipped the files in the same location for convenience in the repo like me (LP)
 /snapshot-wi-oh-deer
 
+# Competition data and large experiment artifacts (see CONTRIBUTING.md)
+/data/raw/*
+/data/processed/*
+!/data/raw/.gitkeep
+!/data/processed/.gitkeep
+/results/artifacts/*
+!/results/artifacts/.gitkeep
+
