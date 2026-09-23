@@ -9,3 +9,5 @@
 /results/artifacts/*
 !/results/artifacts/.gitkeep
 
+# cropped images
+/Snapshot_WI-Oh_Deer_Photos_Cropped
