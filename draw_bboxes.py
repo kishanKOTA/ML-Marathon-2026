@@ -50,12 +50,25 @@ for idx, row in df.iterrows():
         bbox_h = float(row['bbox_height'])
         
         # Convert to pixel coordinates
-        x0 = int(bbox_x * width)
-        y0 = int(bbox_y * height)
-        x1 = int((bbox_x + bbox_w) * width)
-        y1 = int((bbox_y + bbox_h) * height)
+        # x0 = int(bbox_x * width)
+        # y0 = int(bbox_y * height)
+        # x1 = int((bbox_x + bbox_w) * width)
+        # y1 = int((bbox_y + bbox_h) * height)
         
-        # Crop the image to the bounding box
+        # Add 20px padding on all sides
+        padding = 20
+        x0 = max(0, int(bbox_x * width) - padding)
+        y0 = max(0, int(bbox_y * height) - padding)
+        x1 = min(width, int((bbox_x + bbox_w) * width) + padding)
+        y1 = min(height, int((bbox_y + bbox_h) * height) + padding)
+        
+        # If the crop still collapses, clamp to a 1px minimum so it stays within bounds
+        if x1 <= x0:
+            x1 = min(width, x0 + 1)
+        if y1 <= y0:
+            y1 = min(height, y0 + 1)
+        
+        # Crop the image to the bounding box with padding
         cropped_img = img.crop((x0, y0, x1, y1))
         
         # Save to output directory
