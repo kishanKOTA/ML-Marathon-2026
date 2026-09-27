@@ -1,11 +1,17 @@
 # If you unzipped the files in the same location for convenience in the repo like me (LP)
 /snapshot-wi-oh-deer
 
-# Competition data and large experiment artifacts (see CONTRIBUTING.md)
+# Competition data and large experiment artifacts (see docs/CONTRIBUTING.md)
 /data/raw/*
 /data/processed/*
 !/data/raw/.gitkeep
 !/data/processed/.gitkeep
-/results/artifacts/*
-!/results/artifacts/.gitkeep
+/logs/runs/*
+!/logs/runs/.gitkeep
+*.pt
+*.pth
+*.ckpt
 
+# Cache
+__pycache__/
+.ipynb_checkpoints/

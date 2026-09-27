@@ -1,9 +1,13 @@
 [project]
 name = "ml-marathon-2026"
 version = "0.1.0"
-description = "Add your description here"
+description = "Team Rocket's hand-built PyTorch CNNs for deer age and antler classification (Snapshot WI - Oh Deer, ML Marathon 2026)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "pytorchwildlife>=1.3.0",
+    "kagglehub>=1.0.2",
+    "pandas>=3.0.6",
+    "scikit-learn>=1.9.1",
+    "torch>=2.14.0",
+    "torchvision>=0.29.0",
 ]

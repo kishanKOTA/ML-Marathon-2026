@@ -95,3 +95,5 @@ Not fine for ❌
 
 * Generating our entire training pipeline  
 * Commit and merge PRs on our behalf
+
+UPDATE: After September 23 sprint, we decided to move away from off-the-shelf models like YOLO and MegaDetector and instead build simple CNNs in PyTorch by hand, with no AI-generated model code, that classifies trail-cam images for age and antler status. From there, each member picks one part of the model to tinker with (e.g. image preprocessing, augmentation, architecture) to maximize learning, and we compare results in `logs/experiments.md`. AI remains fine for shared plumbing (data download, cropping, train/val split), explanations, and troubleshooting.

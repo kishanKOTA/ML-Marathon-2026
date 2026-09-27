@@ -1,0 +1,8 @@
+# Team's official train/val/test split, read by scripts/make_split.py.
+# All reported numbers use this split, so don't edit it. To try another split (e.g. to check an
+# improvement isn't luck), copy this file, change seed and output, and run:
+#   uv run scripts/make_split.py --config configs/<your_copy>.toml
+
+seed = 42
+n_folds = 7  # val and test each get ~1/n_folds of the images; the rest is train
+output = "data/processed/split.csv"
