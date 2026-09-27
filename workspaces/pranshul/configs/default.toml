@@ -1,0 +1,14 @@
+# Config: the settings your code reads, so you can change an experiment without editing code.
+# Include paths and anything you'll tweak between runs (image size, epochs, batch size, learning rate).
+# One file per experiment: to try a change, copy this file (e.g. to night_contrast.toml), edit the
+# copy, and run with it. That file then records exactly which settings produced that run's results.
+#
+# TOML format: key = value. Strings in quotes, numbers without. [sections] group related keys.
+# Why TOML: unlike JSON it allows comments; unlike YAML, indentation doesn't matter and values like
+# "no" aren't silently turned into booleans. Python reads it with the built-in tomllib (no install).
+# Paths are relative to the repo root.
+
+[paths]
+images = "data/raw/images"
+split = "data/processed/split.csv"  # labels + train/val/test column (scripts/make_split.py)
+runs = "logs/runs/pranshul"
