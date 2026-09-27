@@ -1,6 +1,6 @@
 # Data setup
 
-Getting the competition data onto your machine. Everything lands in the gitignored `data/`. Steps 1-2 are all the default setup needs; steps 3-4 are only for experiments that train on bounding-box crops.
+Getting the competition data onto your machine. Everything lands in the gitignored `data/`. Steps 1-2 are all the default setup needs; step 3 is only for experiments that train on bounding-box crops.
 
 ## 1. Download
 
@@ -34,18 +34,17 @@ Writes `data/processed/split.csv`: the labels CSV plus a `split` column (`train`
 - **Stratified by class**: each split keeps about the overall balance (20% YOUNG, 30% ANTLERED).
 - **Settings** live in `configs/split.toml` (seed, number of folds, output path). Report results on this official split. To check that an improvement isn't just luck, copy the file with a new `seed` and `output` and run `uv run scripts/make_split.py --config configs/<copy>.toml`. Scores from different splits aren't comparable with each other.
 
-## 3. (Optional) Crop each deer by its bounding box
-
-**Pending**: lives on `origin/crop-images` as `scripts/draw_bboxes.py` (20px pad). Before merging: rename to `crop_bboxes.py`, read from `data/raw/`, and write to `data/processed/cropped/`. Its `preprocess_for_yolo11n.py` is no longer needed.
-
-## 4. (Optional) Sort crops into class folders
+## 3. (Optional) Crop each deer into class folders
 
 ```bash
-uv run scripts/build_crop_datasets.py --input-dir data/processed/cropped
+uv run scripts/crop_bboxes.py            # 20px padding around each box
+uv run scripts/crop_bboxes.py --pad 40   # more surrounding context
 ```
 
-Uses `split.csv`, so crops get the same split as everyone else:
+Crops each image in `data/raw/images/` by its bounding box and saves the crop into class folders. The box coordinates, labels, and split all come from `split.csv`, so crops get the same split as everyone else:
 
 ```
 data/processed/crops/<age|antler>/<train|val|test>/<CLASS>/*.jpg
 ```
+
+Each attribute folder loads with `torchvision.datasets.ImageFolder`. `SSWI000000025575326A.jpg` gets skipped because it's truncated in the Kaggle download. Existing crops are overwritten but never deleted, so if you rerun after regenerating `split.csv` with a different seed, delete `data/processed/crops/` first. Otherwise images that moved to a new split stay in the old one too.
