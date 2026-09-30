@@ -21,60 +21,68 @@ import os
 import pandas as pd
 import tomllib
 from pathlib import Path
-from torch.utils.data import Dataset
-from torchvision.io import decode_image
+from torch.utils.data import Dataset    # Dataset stores the samples and their corresponding labels
+from torchvision.io import decode_image # Converts image to tensor
+from torchvision.transforms import v2   # Contains different transform functions
+from torchvision.transforms.functional import InterpolationMode
+from torch import float32
 
-print(os.getcwd())
+# Defines paths that work from wherever the file is called
+root = Path(__file__).resolve().parents[2]
+config_path = root / Path("workspaces/lucas/configs/default.toml")
 
-with open("./configs/default.toml", "rb") as f:
+# Load configuration file
+with open(config_path, "rb") as f:
     data = tomllib.load(f)
 
-age_mapping = {
-    "YOUNG": 0,
-    "ADULT": 1
-}
-
-root = Path("../..").resolve()
 split_path = root / data['paths']['split']
+img_dir = root / data['paths']['images']
 
-df = pd.read_csv(split_path)
-df_train = df[df['split'] == 'train']
-df_labels = df_train[['filename', 'age_status']]
-df_labels['age_status'] = df_labels['age_status'].map(age_mapping)
+age_mapping = {"ADULT": 0, "YOUNG": 1}
+antler_mapping = {"ANTLERLESS": 0, "ANTLERED": 1}
 
-img_dir = data['paths']['images']
+# Default transformation applied to every image loaded 
+default_transforms = v2.Compose([
+            v2.ToImage(),   # ?
+            v2.ToDtype(float32, scale=True), # Converts pixel values to floats from 0-1
+            v2.Resize(size=(data['train']['image_size'], data['train']['image_size']), interpolation=InterpolationMode.BILINEAR, antialias=True)
+        ])
 
-# Custom class needed to prepare data for model. Copied reference from torch docs
-class CustomImageDataset(Dataset):
-    def __init__(self, img_dir, df_labels):
+# Object initialization needed to prepare data for model. Copied reference from torch docs
+class DeerDataset(Dataset):
+    def __init__(self, img_dir, attribute, split_path, split_name, transforms=default_transforms):
+
+        df = pd.read_csv(split_path)
+        df_split = df[df['split'] == split_name]
+
+        if attribute == "age":
+            attribute_col = "age_status"
+            attribute_map = age_mapping
+        if attribute == "antlers":
+            attribute_col = "antler_status"
+            attribute_map = antler_mapping
+
+        df_labels = df_split[['filename', attribute_col]]
+        df_labels[attribute_col] = df_labels[attribute_col].map(attribute_map)
+
+        self.attribute_col = attribute_col
         self.img_labels = df_labels
         self.img_dir = img_dir
+        self.transforms = transforms
+
 
     def __len__(self):
         return len(self.img_labels)
 
-    def __getitem__(self):
-        img_path = os.path.join(self.img_dir, self.img_labels['filename'])
-        image = decode_image(img_path)
-        label = self.img_labels['age_status']
+
+    def __getitem__(self, idx):
+        img_path = os.path.join(self.img_dir, self.img_labels['filename'].iloc[idx])
+        image = decode_image(img_path, mode="RGB") # converts image to a tensor
+
+        if self.transforms is not None:
+            image = self.transforms(image)
+
+        label = self.img_labels[self.attribute_col].iloc[idx]
         return image, label
-
-        # Returns tuple (SSWI000000027884533B.jp, 0)
-
-
-'''
-Here's what's still missing for it to work as a dataset, roughly in the order I'd build it:
-
-1. Row lookup by index. __getitem__(self, idx) should pull one row with .iloc[idx], then read that row's filename and label.
-2. A split argument. Filter to 'train', 'val' or 'test' inside __init__, so one class can build all three datasets. Right now the filter runs at import time and is fixed to 'train'.
-3. Config and paths inside the class, built from the repo root. Take the config (or its path) as an argument and build both the imagefile__), so it works when run from the repo root.
-4. Label choice from the config. Use attribute to pick age_status or antler_status, and add a mapping for antlers (ANTLERLESS/ANTLERED).
-5. Image preprocessing:
-   - force 3 channels (ImageReadMode decode as 1 channel
-   - resize to image_size
-   - convert uint8 0–255 to float 0–
-   - a transform hook where your preprocessing experiments can plug in later
-6. Return types. Return the image as as an int or tensor, so theDataLoader can batch them.
-7. Docstrings and type hints once th
-
-'''
+    
+        # Returns (tensor, label) tuple pair
