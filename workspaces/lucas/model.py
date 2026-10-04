@@ -24,7 +24,6 @@ import torch.nn.functional as F  # Functional module that contains helper operat
 # Defines paths and load config
 root = Path(__file__).resolve().parents[2]
 config_path = root / Path("workspaces/lucas/configs/default.toml")
-
 with open(config_path, "rb") as f:
     data = tomllib.load(f)
 
@@ -49,7 +48,6 @@ class DeerCNN(nn.Module):   # Inherits nn.Module class
             in_features - Number of input features. Needs to match previous layer
             out_features - Number of output classes / features
         '''
-
 
         self.conv1 = nn.Conv2d(3, 16, 3, padding=1) # If converting to grayscale, need to adjust the first in channel value
         self.conv2 = nn.Conv2d(16, 32, 3, padding=1)
