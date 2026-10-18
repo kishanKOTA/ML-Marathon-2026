@@ -59,6 +59,6 @@ class DeerCNN(nn.Module):   # Inherits nn.Module class
         x = F.max_pool2d(F.relu(self.conv1(x)), 2)  # maxpool of size 2; halves the input size
         x = F.max_pool2d(F.relu(self.conv2(x)), 2)  # ReLU maps the output of the convolution sum into a 0-x range
         x = F.max_pool2d(F.relu(self.conv3(x)), 2)
-        x = F.adaptive_avg_pool2d(x, 1) # Averages each of the 64 feature maps down to one value, no matter the image size
-        x = x.flatten(1) # built in tensor opeartion to reduce dimension by 1
+        x = F.adaptive_avg_pool2d(x, 1) # Averages each of the 64 feature maps down to one value, so it goes from 64xHxW → 64x1x1. This saves us from calculating the flattened size by hand.
+        x = x.flatten(1) # Flattens the tensor into a single vector of size 64
         return self.linear(x)
