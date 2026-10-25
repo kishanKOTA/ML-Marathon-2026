@@ -10,5 +10,13 @@
 
 [paths]
 images = "data/raw/images"
+cropped_images = "data/processed/cropped_images"
 split = "data/processed/split.csv"  # labels + train/val/test column (scripts/make_split.py)
 runs = "logs/runs/amanda"
+
+[train]
+attribute = "age"
+image_size = 128
+batch_size = 32         # number of training samples processed tgt before model updates its weights
+epochs = 10             # number of passes
+learning_rate = 0.001   # controls how big of a step the model takes when updating weights

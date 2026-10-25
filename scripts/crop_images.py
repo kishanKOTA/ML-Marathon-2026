@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 
 # Configuration
 DATA_CSV = BASE_DIR / "snapshot-wi-oh-deer" / "Snapshot_WI-Oh_Deer_data-v2.csv"
-PHOTOS_DIR = BASE_DIR / "snapshot-wi-oh-deer" / "Snapshot_WI-Oh_Deer_Photos"
+PHOTOS_DIR = BASE_DIR / "data" / "raw" / "images"
 OUTPUT_DIR = BASE_DIR / "data" / "processed" / "cropped_images"
 
 # Create output directory
