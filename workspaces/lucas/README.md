@@ -36,9 +36,9 @@ To Do's
 Updated Plan:
 
 1. Add day/night and deer visibility tag to images by looking at RGB distributions and calculating bbox extent (helpful for diagnosis since those two introduce a lot of variability). Create some long-due EDA histograms showing data distribution by day/night, month of images, and visibility.
-2. Adapt a proven model architecture to train a 3-class baseline (antlered adult / antlerless adult / young) with class weights for imbalance. Log val F1 overall and split by day/night, visibility, and month.
-3. Setup pre-processing step to adjust brightness channel on images. Test and see if that improves model before making it permanent.
-4. Test different data augmentation techniques one at a time (one row in `logs/experiments.md`): horizontal flip, brightness/contrast jitter, mild random crop/zoom (ensuring antlers aren't cut), and small blur/noise (most likely to hurt spots)
+2. Adapt a proven model architecture (AlexNet, UNet) to train a 3-class baseline (antlered adult / antlerless adult / young) with class weights for imbalance. Log val F1 overall and split by day/night, visibility, and month.
+3. (Setup pre-processing step to adjust brightness channel on images. Test and see if that improves model before making it permanent.) - do this at the end, a model can prob pick up 
+4. Test different data augmentation techniques one at a time (one row in `logs/experiments.md`): horizontal flip, brightness/contrast jitter, mild random crop/zoom (ensuring antlers aren't cut), and small blur/noise (most likely to hurt spots). We only appply augmentation to train split, and we can give less to the train split since we can augment them and get more samples. 
 5. Combine the best preprocessing + augmentations into the final run, note inference time
 
 Extra things to try (if I get to it):
