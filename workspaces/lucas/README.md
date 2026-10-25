@@ -45,3 +45,9 @@ Extra things to try (if I get to it):
 - Downweight bboxes touching the image edge
 - Grayscale-everything test (night is NIR, so not identical to grayscale day, but tests whether color matters)
 - Month as an input (deer mating season → antlers form + young deer a few months later)
+
+### October 25, 2026
+
+- Amanda and I met on Sunday, and decided ResNet18 will be the model we will adapt for our deer dataset.
+
+
