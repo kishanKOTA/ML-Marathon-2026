@@ -12,6 +12,8 @@ machine. Compare the printed fingerprint with a teammate's to confirm.
 Split is grouped by camera_location_seq_no (a camera's images all land in one
 split, so backgrounds can't leak from train into val/test) and stratified on the
 age+antler combination (each split keeps roughly the overall class balance).
+Images in CORRUPT_IMAGES are dropped after splitting, so removing one doesn't
+reshuffle any other image's split.
 
 Usage:
     uv run scripts/make_split.py
@@ -30,6 +32,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 LABELS_CSV = REPO_ROOT / "data" / "raw" / "Snapshot_WI-Oh_Deer_data-v2.csv"
 DEFAULT_CONFIG = REPO_ROOT / "configs" / "split.toml"
 GROUP_COL = 'camera_location_seq_no'
+CORRUPT_IMAGES = {
+    'SSWI000000025575326A.jpg',  # truncated JPEG; torchvision and PIL both fail to decode
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -104,6 +109,7 @@ def main() -> None:
 
     df = pd.read_csv(LABELS_CSV)
     df['split'] = assign_splits(df=df, n_folds=config['n_folds'], seed=config['seed'])
+    df = df[~df['filename'].isin(CORRUPT_IMAGES)]
     check_no_camera_overlap(df=df)
 
     split_csv.parent.mkdir(parents=True, exist_ok=True)
