@@ -23,7 +23,7 @@ import torch.nn.functional as F  # Functional module that contains helper operat
 
 # Defines paths and load config
 root = Path(__file__).resolve().parents[2]
-config_path = root / Path("workspaces/lucas/configs/default.toml")
+config_path = root / Path("models/simple_cnn/configs/default.toml")
 with open(config_path, "rb") as f:
     data = tomllib.load(f)
 

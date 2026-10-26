@@ -1,6 +1,12 @@
-# Workspaces
+# Models
 
-One folder per member for your hand-built CNN. This file is the shared guide; your own `README.md` tracks your personal path.
+One folder per model architecture (e.g. `simple_cnn/`, `resnet18/`). This file is the shared guide; each model's `README.md` names its owner and tracks what's been tried.
+
+## Why one folder per model
+
+We started with one workspace per member, but experiments are compared by model, not by person: the writeup, the experiment log, and run outputs all refer to "the simple CNN" or "ResNet-18". Organizing by model keeps each architecture's code, config, and notes in one place, makes it easy to hand a model to another member or pick one back up, and avoids empty folders when someone is between models.
+
+Each model folder has an **owner** (listed in its `README.md`) who writes its model code. A member can own more than one model.
 
 ## A note on AI
 
@@ -9,10 +15,9 @@ This folder is where the learning happens, so we recommend **not** using AI to w
 ## Layout
 
 ```
-workspaces/<name>/
-  README.md     # what you're exploring + what you've tried
+models/<model>/
+  README.md     # owner, what you're exploring + what you've tried
   configs/      # settings your code reads (paths, image size, epochs, ...)
-  notebooks/
   dataset.py    # images + labels -> model input
   model.py      # the CNN
   train.py      # learn on train, check on val
@@ -31,19 +36,21 @@ data/raw/images/ + data/processed/split.csv     (shared, same for everyone)
 
 Both shared inputs are set in `configs/default.toml` (`images`, `split`). Each file's docstring lists its input and output.
 
+Each model keeps its own `dataset.py`, since loaders may differ between models (e.g. input size, cropping). They must all read the same `data/processed/split.csv` (from `scripts/make_split.py` with the seed in `configs/split.toml`), so every model trains, validates, and tests on the same images and scores stay comparable.
+
 Useful for others (e.g. a dataset class)? Promote it to a shared folder in its own PR.
 
 ## Running
 
-From the repo root, so `metrics` and `workspaces.*` imports resolve:
+From the repo root, so `metrics` and `models.*` imports resolve:
 
 ```bash
-uv run python -m workspaces.<name>.train
+uv run python -m models.<model>.train
 ```
 
 PyCharm: set the run config's working directory to the repo root and the interpreter to `.venv`. Config paths are relative to the repo root.
 
-Save run outputs to `logs/runs/<name>/` and add a row to `logs/experiments.md`.
+Save run outputs to `logs/runs/<model>/` and add a row to `logs/experiments.md`.
 
 ## Step by step
 
@@ -51,7 +58,7 @@ Do these in order. After each step, run something small to check it works before
 
 ### 0. Get the data and look at it
 - If you haven't yet: `uv run scripts/fetch_data.py`, then `uv run scripts/make_split.py`.
-- In a notebook in `notebooks/`, open `data/processed/split.csv` with pandas (`pd.read_csv`). Look at the columns, and count how many rows each split has (`value_counts()`).
+- In a notebook in the top-level `notebooks/` (prefix it with your name, e.g. `lucas_eda.ipynb`), open `data/processed/split.csv` with pandas (`pd.read_csv`). Look at the columns, and count how many rows each split has (`value_counts()`).
 - Open a few images (a day one and a night one) with PIL (`Image.open`). Check their size and `.mode` (e.g. `RGB`). Knowing your data saves hours later.
 
 ### 1. Fill in your config (`configs/default.toml`)
@@ -82,7 +89,7 @@ Do these in order. After each step, run something small to check it works before
   - **Validate**: `model.eval()` and wrap it in `with torch.no_grad():`. Predict on every val batch, take the higher score as the prediction (`argmax`), and compute F1 against the true labels. Until `metrics/` has the team's F1, use `sklearn.metrics.f1_score`.
 - Print the train loss and val F1 every epoch. When val F1 beats your best so far, save the model with `torch.save(model.state_dict(), ...)` into your runs folder.
 - **Sanity check first**: train on just ~20 images for many epochs. If the loss doesn't drop close to zero, something is broken. Fix that before training on everything.
-- `if __name__ == '__main__':` at the bottom, so `uv run python -m workspaces.<name>.train` runs it.
+- `if __name__ == '__main__':` at the bottom, so `uv run python -m models.<model>.train` runs it.
 - After each real run, add a row to `logs/experiments.md`.
 
 ### 5. `evaluate.py`: the final grade (run rarely)

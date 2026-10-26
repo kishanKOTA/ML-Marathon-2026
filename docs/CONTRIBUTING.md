@@ -16,10 +16,11 @@ logs/
 metrics/             # shared evaluation code (F1)
 scripts/             # shared data pipeline (fetch, split, crop)
 tests/               # tests for metrics/ and scripts/
-workspaces/<name>/   # personal: your CNN code, configs/, notebooks/
+models/<model>/      # one per architecture (owner in its README): CNN code, configs/
+notebooks/           # EDA, prefixed with author name (e.g. lucas_eda.ipynb)
 ```
 
-Reusable by others -> `metrics/` or `scripts/`. Yours only -> `workspaces/<name>/`. Promote personal code to a shared folder in its own PR once it's stable.
+Reusable by others -> `metrics/` or `scripts/`. Specific to one model -> `models/<model>/`. Promote personal code to a shared folder in its own PR once it's stable.
 
 ## Branches and PRs
 
@@ -33,17 +34,17 @@ Reusable by others -> `metrics/` or `scripts/`. Yours only -> `workspaces/<name>
 
 - Every PR needs **1 approval from someone other than the author**. "Approve" means a human understood it.
 - `main` has branch protection (no direct pushes). If you *can* push to `main`, flag it.
-- **Self-merge exception**: a PR touching only your `workspaces/<name>/` with no review after ~3-4 days may be self-merged; say so in the PR description. Shared code (`metrics/`, `scripts/`, `pyproject.toml`, `uv.lock`, docs) always waits for a real review.
+- **Self-merge exception**: a PR touching only a `models/<model>/` you own with no review after ~3-4 days may be self-merged; say so in the PR description. Shared code (`metrics/`, `scripts/`, `pyproject.toml`, `uv.lock`, docs) always waits for a real review.
 
 ## Agents
 
-Agents may edit freely inside the branch owner's `workspaces/<name>/` and the PR's stated scope, **except model code**. They must ask a human before:
+Agents may edit freely inside a `models/<model>/` owned by the branch owner and the PR's stated scope, **except model code**. They must ask a human before:
 - Editing shared code or config outside the PR's scope.
 - Deleting or renaming files, or adding a dependency.
 - Committing/pushing to `main`, force-pushing, or rewriting shared history.
 - Downloading, moving, or committing competition data.
 
-**No AI-generated model code.** Each member writes their own architecture, training loop, and loss/optimizer setup. Agents may explain, review, and debug code in `workspaces/*`, and may help with shared plumbing (data pipeline, metrics).
+**No AI-generated model code.** Each member writes their own architecture, training loop, and loss/optimizer setup. Agents may explain, review, and debug code in `models/*`, and may help with shared plumbing (data pipeline, metrics).
 
 ## Data
 

@@ -1,10 +1,12 @@
-# Lucas's workspace
+# Simple CNN
 
-Shared step-by-step guide, label rule, and resources: `workspaces/README.md`.
+**Owner**: Lucas
+
+Shared step-by-step guide, label rule, and resources: `models/README.md`.
 
 **What I'm exploring**: Image preprocessing (e.g. contrast normalization for night IR images, deblurring).
 
-**How to run**: from the repo root, `uv run python -m workspaces.lucas.train` (then `.evaluate` once done tuning).
+**How to run**: from the repo root, `uv run python -m models.simple_cnn.train` (then `.evaluate` once done tuning).
 
 ## What I've tried / what I learned
 

@@ -29,7 +29,7 @@ from torch import float32
 
 # Defines paths that work from wherever the file is called
 root = Path(__file__).resolve().parents[2]
-config_path = root / Path("workspaces/lucas/configs/default.toml")
+config_path = root / Path("models/simple_cnn/configs/default.toml")
 
 # Load configuration file
 with open(config_path, "rb") as f:
