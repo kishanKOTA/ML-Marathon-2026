@@ -9,9 +9,9 @@ Team Rocket's entry in the [Wisconsin ML Marathon 2026](https://ml-marathon.wisc
 
 ## Approach
 
-No off-the-shelf detectors (YOLO, MegaDetector). Each member hand-builds a PyTorch CNN that classifies trail-cam images for age and antler status, then tinkers with one part (e.g. preprocessing, bounding-box cropping, augmentation, architecture). Slower, but the point is to learn. **Model code is written by us, not AI.**
+No off-the-shelf detectors (YOLO, MegaDetector). We hand-build PyTorch CNNs that classify trail-cam images for age and antler status, then tinkers with one part (e.g. preprocessing, bounding-box cropping, augmentation, architecture). Slower, but the point is to learn. **Model code is written by us, not AI.**
 
-Shared code: `scripts/` (data pipeline) and `metrics/`. Personal models: `workspaces/<name>/` (see `workspaces/README.md`). Runs: `logs/experiments.md`.
+Shared code: `scripts/` (data pipeline) and `metrics/`. Models: `models/<model>/`, one folder per architecture with a named owner (see `models/README.md`). EDA notebooks: `notebooks/`, prefixed with the author's name. Runs: `logs/experiments.md`.
 
 ## Setup
 
@@ -51,7 +51,7 @@ This project uses [uv](https://docs.astral.sh/uv/) for package management.
 6. Run scripts within the environment using `uv run`, from the repo root:
 
    ```bash
-   uv run python -m workspaces.<name>.train
+   uv run python -m models.<model>.train
    ```
 
 To add a new dependency (shared config, needs a teammate's review):

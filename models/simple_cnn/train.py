@@ -19,7 +19,7 @@ Worth thinking about:
 from pathlib import Path
 import tomllib
 
-from workspaces.lucas import dataset, model
+from models.simple_cnn import dataset, model
 
 from torch.utils.data import DataLoader
 import torch
@@ -29,12 +29,12 @@ from sklearn.metrics import f1_score
 import pandas as pd
 from datetime import datetime
 
-# Run this uv run python -m workspaces.lucas.train 2>&1 | tee logs/runs/lucas/console.log
+# Run this uv run python -m models.simple_cnn.train 2>&1 | tee logs/runs/simple_cnn/console.log
 
 def main():
     # Defines paths and load config
     root = Path(__file__).resolve().parents[2]
-    config_path = root / Path("workspaces/lucas/configs/default.toml")
+    config_path = root / Path("models/simple_cnn/configs/default.toml")
     config_name = config_path.stem
 
     with open(config_path, "rb") as f:

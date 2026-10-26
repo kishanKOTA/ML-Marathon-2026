@@ -10,12 +10,13 @@
 
 [paths]
 images = "data/raw/images"
+cropped_images = "data/processed/cropped_images"
 split = "data/processed/split.csv"  # labels + train/val/test column (scripts/make_split.py)
-runs = "logs/runs/lucas"
+runs = "logs/runs/resnet18"
 
 [train]
-attribute = 'age' 
-image_size = 224    # Parameter to standardize and resize image inputs, balancing accuracy and speed. Used as multiples of 2 to allign with pooling layers
-epochs = 100        # Number of complete passes through the entire dataset.
-learning_rate = 0.001 # hyperparameter that dicattes how fast the model will update is gradient (rate of change)
-batch_size = 32     # Number of images processed before a model updates its weights
+attribute = "age"
+image_size = 128
+batch_size = 32         # number of training samples processed tgt before model updates its weights
+epochs = 10             # number of passes
+learning_rate = 0.001   # controls how big of a step the model takes when updating weights
