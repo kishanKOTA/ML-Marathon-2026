@@ -50,4 +50,9 @@ Extra things to try (if I get to it):
 
 - Amanda and I met on Sunday, and decided ResNet18 will be the model we will adapt for our deer dataset.
 
+Additional potential issue:
+- Downsampling to 224 might make deer spots unresolvable. Cropping to the bbox first, then downsampling is probably the best approach to saving details. Though that would mean that at inference, we wouLd need megadetectors or yolo to find the deer for us, then crop, then classify. 
+
+We could try a ResNet run first, since it doesn't take long in theory, then add this as another step.
+
 
