@@ -19,37 +19,87 @@ Worth thinking about:
 import pandas as pd
 from pathlib import Path
 import tomllib
-import torchvision.transforms.v2
+import torch
+from torch.utils.data import Dataset
+from torchvision.io import decode_image
+from torchvision.transforms import v2
 
-age_mapping = {"ADULT": 0, "YOUNG": 1}
-antler_mapping = {"ANTLERLESS": 0, "ANTLERED": 1}
-splits = ["train", "val", "test"]
+# find the files
+THIS_DIR = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 
-with open("../configs/default.toml", "rb") as f:
-    data = tomllib.load(f)
-root = Path("../..").resolve()
-split_path = root / data['paths']['split']
-df = pd.read_csv(split_path)
+with open(THIS_DIR / "configs" / "default.toml", "rb") as f:
+    config = tomllib.load(f)
+
+SPLIT_PATH = ROOT / config["paths"]["split"]
+IMG_DIR = ROOT / config["paths"]["images"]
+
+AGE_MAP = {"ADULT": 0, "YOUNG": 1}
+ANTLER_MAP = {"ANTLERLESS": 0, "ANTLERED": 1}
+# splits = ["train", "val", "test"]
+# df = pd.read_csv(SPLIT_PATH)
 
 
 
-class Dataset:
+class DeerDataset(Dataset):
 
-    def __init__(self, split:str):
-        """Load the split file and keep only the rows for the split you want"""
-        if split not in splits:
-            raise ValueError(f"Invalid split '{split}'. Expected one of: train, val, test.")
+    def __init__(self, attribute, split_name, transform=None):
+        if split_name not in ["train", "val", "test"]:
+            raise ValueError(f"Bad split '{split_name}'")
 
-        self.split = split
-        self.split_df = df[df['split'] == split]
+        if attribute == "age":
+            self.label_col = "age_status"
+            label_map = AGE_MAP
+        elif attribute == "antlers":
+            self.label_col = "antler_status"
+            label_map = ANTLER_MAP
+        else:
+            raise ValueError(f"attribute must be 'age' or 'antlers', got '{attribute}'")
+
+        df = pd.read_csv(SPLIT_PATH)
+        df = df[df["split"] == split_name].copy()
+
+        df[self.label_col] = df[self.label_col].map(label_map) # swaps every text label for its number 0/1
+        if df[self.label_col].isna().any():
+            raise ValueError("some labels were not in the mapping")
+
+        self.df = df.reset_index(drop=True)
+        self.transform = transform
 
     def __len__(self):
-        return len(self.split)
+        return len(self.df)
 
     def __getitem__(self, idx):
         """return the image and label for the row at index idx in self.split"""
-        row = self.split.iloc[idx]
-        image_name = row['filename']
-        image_path = root / data['paths']['images'] / image_name
-        label = row[data['train']['attribute']]
-        return image_path, label
+        row = self.df.iloc[idx]
+        img_path = IMG_DIR / row['filename']
+        img = decode_image(str(img_path), mode="RGB")
+
+        if self.transform is not None:
+            img = self.transform(img)
+
+        label = int(row[self.label_col])
+        return img, label
+
+def make_transform(img_size):
+    return v2.Compose([
+        v2.Resize((img_size, img_size), antialias=True),
+        v2.ToDtype(torch.float32, scale=True),
+        v2.Normalize(mean=[0.485, 0.456, 0.406],
+                     std=[0.229, 0.224, 0.225]),
+    ])
+
+# test the code above
+if __name__ == "__main__":
+    ds = DeerDataset("age", "train", transform=make_transform(224))
+    print("number of samples:", len(ds))
+
+    image, label = ds[0]
+    print("shape:", image.shape)     # expect torch.Size([3, 224, 224])
+    print("dtype:", image.dtype)     # expect torch.float32
+    print("label:", label)           # expect 0 or 1
+
+    from torch.utils.data import DataLoader
+    loader = DataLoader(ds, batch_size=8, shuffle=True)
+    images, labels = next(iter(loader))
+    print("batch:", images.shape, labels)   # expect [8, 3, 224, 224]
