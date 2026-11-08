@@ -1,8 +1,11 @@
 """Tag each image with day/night (from color saturation) and deer visibility (from bbox extent).
 
 Input:  data/raw/images/ + data/raw/Snapshot_WI-Oh_Deer_data-v2.csv (from fetch_data.py)
+        data/processed/split.csv (from make_split.py)
 Output: data/processed/tags.csv, one row per image:
         filename, mean_saturation, day_night, bbox_area, bbox_size, bbox_touches_edge
+        data/processed/split_tagged.csv: split.csv with the tag columns appended (corrupt
+        images are already dropped from split.csv, so they are absent here too)
 
 Night shots use an IR flash and are saved as 3-channel JPEGs with B == G == R, so their HSV
 saturation is exactly 0. On the v2 data, 2562 images have mean saturation 0 and the least
@@ -14,7 +17,7 @@ normalized to 0-1). bbox_size splits it into balanced tertiles (small/medium/lar
 bbox_touches_edge flags deer likely cut off by the frame. Raw numbers are kept next to the
 labels so thresholds can change without re-reading images.
 
-Regenerate:
+Regenerate (after make_split.py):
     uv run scripts/tag_images.py
     uv run scripts/tag_images.py --night-threshold 2
 """
@@ -30,6 +33,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 IMAGES_DIR = REPO_ROOT / "data" / "raw" / "images"
 LABELS_CSV = REPO_ROOT / "data" / "raw" / "Snapshot_WI-Oh_Deer_data-v2.csv"
 TAGS_CSV = REPO_ROOT / "data" / "processed" / "tags.csv"
+SPLIT_CSV = REPO_ROOT / "data" / "processed" / "split.csv"
+SPLIT_TAGGED_CSV = REPO_ROOT / "data" / "processed" / "split_tagged.csv"
 
 # Truncated in the Kaggle download: bottom half is gray and PIL raises OSError on load
 CORRUPT_FILES = {'SSWI000000025575326A.jpg'}
@@ -107,7 +112,7 @@ def bbox_tags(labels: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> None:
-    """Tag every labeled image and write data/processed/tags.csv."""
+    """Tag every labeled image, write data/processed/tags.csv, and join it onto split.csv."""
     args = parse_args()
     labels = pd.read_csv(LABELS_CSV)
     # One box per image in v2; the merge below would duplicate rows if that changes
@@ -129,6 +134,12 @@ def main() -> None:
     print(f"Wrote {len(tags)} rows to {TAGS_CSV}")
     print(tags['day_night'].value_counts().to_string())
     print(pd.crosstab(tags['bbox_size'], tags['bbox_touches_edge']).to_string())
+
+    split = pd.read_csv(SPLIT_CSV)
+    split_tagged = split.merge(tags, on='filename', how='left', validate='one_to_one')
+    assert split_tagged['day_night'].notna().all(), 'some split images have no tags'
+    split_tagged.to_csv(SPLIT_TAGGED_CSV, index=False)
+    print(f"Wrote {len(split_tagged)} rows to {SPLIT_TAGGED_CSV}")
 
 
 if __name__ == '__main__':
