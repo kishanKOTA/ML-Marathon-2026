@@ -1,3 +1,5 @@
+UPDATE: We are no longer using different branches. For simplicity we are coordinating edits and pulling before working on the same file.
+
 # Contributing
 
 4 people, each with a coding agent, on one repo. These rules keep `main` clean and every PR reviewable in one sitting.
