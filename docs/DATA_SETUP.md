@@ -28,7 +28,7 @@ Works the same on Windows, macOS, and Linux/WSL. The kagglehub cache is `~/.cach
 uv run scripts/make_split.py
 ```
 
-Writes `data/processed/split.csv`: the labels CSV plus a `split` column (`train` ~71%, `val` ~14%, `test` ~14%). Everyone loads this same file, so scores are comparable. It's deterministic; the printed fingerprint (`673e0097` as of 9/27) should match across machines.
+Writes `data/processed/split.csv`: the labels CSV plus a `split` column (`train` ~71%, `val` ~14%, `test` ~14%). Everyone loads this same file, so scores are comparable. It's deterministic; the printed fingerprint (`9172c7a9` as of 10/4: train 3481 / val 703 / test 695, 4879 images) should match across machines. One image is excluded: `SSWI000000025575326A.jpg` is a truncated JPEG that won't decode, so `make_split.py` drops it after splitting (no other image changes split).
 
 - **Grouped by camera**: shots from one camera share background, lighting, and often the same deer. A random split puts near-duplicates in train and val/test, so scores reward memorizing backgrounds. Each camera lands entirely in one split.
 - **Stratified by class**: each split keeps about the overall balance (20% YOUNG, 30% ANTLERED).
