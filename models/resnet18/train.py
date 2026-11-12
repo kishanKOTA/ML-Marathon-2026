@@ -46,6 +46,10 @@ print("using device:", device)
 train_ds = DeerDataset(cfg["attribute"], "train", transform=make_transform(cfg["image_size"]))
 val_ds = DeerDataset(cfg["attribute"], "val", transform=make_transform(cfg["image_size"]))
 
+print("train class balance:\n", train_ds.df[train_ds.label_col].value_counts(normalize=True))
+print("val class balance:\n", val_ds.df[val_ds.label_col].value_counts(normalize=True))
+
+
 train_loader = DataLoader(train_ds, batch_size=cfg["batch_size"], shuffle=True)
 val_loader = DataLoader(val_ds, batch_size=cfg["batch_size"], shuffle=False)
 
@@ -96,7 +100,7 @@ tag = f"{cfg['attribute']}_{cfg['image_size']}_{mode}"
 
 best_f1 = 0.0
 start = time.time()
-with open("training_log.csv", "w", newline="") as f:
+with open(runs_dir / f"{tag}_log.csv", "w", newline="") as f:
     writer = csv.writer(f)
     # writer.writerow(["epoch", "train_loss", "val_loss", "val_f1"])
     writer.writerow(["epoch", "train_loss", "val_loss", "val_f1", "epoch_seconds"])
