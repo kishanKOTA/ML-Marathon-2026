@@ -15,10 +15,16 @@ split = "data/processed/split_tagged.csv"  # labels + train/val/test column (scr
 runs = "logs/runs/resnet18"
 
 [train]
+seed = 42
 attribute = "age"
 image_size = 224
 batch_size = 32         # number of training samples processed tgt before model updates its weights
-epochs = 30             # number of passes
-learning_rate = 0.001   # controls how big of a step the model takes when updating weights
+
 pretrained = false
-seed = 42
+freeze_backbone = false
+learning_rate = 0.001   # controls how big of a step the model takes when updating weights
+epochs = 30             # number of passes
+class_weights = false
+crop = false
+augment = false
+run_name = "default"

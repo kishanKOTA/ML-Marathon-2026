@@ -72,10 +72,11 @@ class ResNet18(nn.Module):
         x = torch.flatten(x, 1)        # shape (batch, 512)
         return self.fc(x)              # shape (batch, 2)
 
-def get_pretrained_resnet18(num_classes=2):
+def get_pretrained_resnet18(num_classes=2, freeze_backbone=False):
     model = resnet18(weights=ResNet18_Weights.DEFAULT)
-    for param in model.parameters():
-        param.requires_grad = False # freeze all layers
+    if freeze_backbone:
+        for param in model.parameters():
+            param.requires_grad = False # freeze all layers
 
     model.fc = nn.Linear(model.fc.in_features, num_classes)
     return model

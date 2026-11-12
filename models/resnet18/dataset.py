@@ -20,6 +20,7 @@ import pandas as pd
 from pathlib import Path
 import tomllib
 import torch
+import sys
 from torch.utils.data import Dataset
 from torchvision.io import decode_image
 from torchvision.transforms import v2
@@ -28,8 +29,10 @@ from torchvision.transforms import v2
 THIS_DIR = Path(__file__).resolve().parent
 ROOT = Path(__file__).resolve().parents[2]
 
-with open(THIS_DIR / "configs" / "default.toml", "rb") as f:
+cfg_name = sys.argv[1] if len(sys.argv) > 1 else "default.toml"
+with open(THIS_DIR / "configs" / cfg_name, "rb") as f:
     config = tomllib.load(f)
+print("config:", cfg_name)
 
 SPLIT_PATH = ROOT / config["paths"]["split"]
 IMG_DIR = ROOT / config["paths"]["images"]
@@ -43,7 +46,7 @@ ANTLER_MAP = {"ANTLERLESS": 0, "ANTLERED": 1}
 
 class DeerDataset(Dataset):
 
-    def __init__(self, attribute, split_name, transform=None):
+    def __init__(self, attribute, split_name, transform=None, crop=False):
         if split_name not in ["train", "val", "test"]:
             raise ValueError(f"Bad split '{split_name}'")
 
@@ -65,6 +68,7 @@ class DeerDataset(Dataset):
 
         self.df = df.reset_index(drop=True)
         self.transform = transform
+        self.crop = crop
 
     def __len__(self):
         return len(self.df)
@@ -74,6 +78,15 @@ class DeerDataset(Dataset):
         row = self.df.iloc[idx]
         img_path = IMG_DIR / row['filename']
         img = decode_image(str(img_path), mode="RGB")
+
+        if self.crop:
+            _,H,W = img.shape
+            pad = 0.1
+            x0 = max(0, int((row.bbox_origin_x - pad * row.bbox_width) * W))
+            y0 = max(0, int((row.bbox_origin_y - pad * row.bbox_height) * H))
+            x1 = min(W, int((row.bbox_origin_x + (1 + pad) * row.bbox_width) * W))
+            y1 = min(H, int((row.bbox_origin_y + (1 + pad) * row.bbox_height) * H))
+            img = img[:, y0:y1, x0:x1]
 
         if self.transform is not None:
             img = self.transform(img)
@@ -87,6 +100,16 @@ def make_transform(img_size):
         v2.ToDtype(torch.float32, scale=True),
         v2.Normalize(mean=[0.485, 0.456, 0.406],
                      std=[0.229, 0.224, 0.225]),
+    ])
+
+def make_train_transform(img_size):
+    return v2.Compose([
+        v2.RandomResizedCrop(img_size, scale=(0.7, 1.0), antialias=True),
+        v2.RandomHorizontalFlip(),
+        v2.RandomGrayscale(p=0.3),
+        v2.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.2),
+        v2.ToDtype(torch.float32, scale=True),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
 # test the code above
