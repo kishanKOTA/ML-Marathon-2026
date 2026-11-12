@@ -12,6 +12,7 @@ Worth thinking about:
 
 import torch
 import torch.nn as nn
+from torchvision.models import resnet18, ResNet18_Weights
 
 class BasicBlock(nn.Module):
     def __init__(self, in_ch, out_ch, stride=1): 
@@ -70,3 +71,20 @@ class ResNet18(nn.Module):
         x = self.pool(x)               # shape (batch, 512, 1, 1)
         x = torch.flatten(x, 1)        # shape (batch, 512)
         return self.fc(x)              # shape (batch, 2)
+
+def get_pretrained_resnet18(num_classes=2):
+    model = resnet18(weights=ResNet18_Weights.DEFAULT)
+    model.fc = nn.Linear(model.fc.in_features, num_classes)
+    return model
+
+
+if __name__ == "__main__":
+    model = ResNet18(num_classes=2)
+    for size in [224, 384]:
+        out = model(torch.randn(2, 3, size, size))
+        print(size, "→", out.shape)          # expect torch.Size([2, 2]) both times
+
+    n_params = sum(p.numel() for p in model.parameters())
+    print("parameters:", n_params)
+    ref = resnet18(num_classes=2)
+    print("torchvision parameters:", sum(p.numel() for p in ref.parameters()))
