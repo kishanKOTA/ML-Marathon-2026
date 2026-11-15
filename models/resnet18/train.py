@@ -100,15 +100,15 @@ def train_one_epoch():
 
     total_loss = 0.0
     for images, labels in tqdm(train_loader, desc="train", leave=False):
-        images, labels = images.to(device), labels.to(device)
+        images, labels = images.to(device), labels.to(device)   # move the data to the GPU (or MPS) if available
 
         optimizer.zero_grad()           # clear old gradients
-        outputs = model(images)         # forward pass
-        loss = loss_fn(outputs, labels) # check how wrong it was
+        outputs = model(images)         # forward pass: images → logits, shape [32, 2]
+        loss = loss_fn(outputs, labels) # check how wrong the batch was
         loss.backward()                 # compute gradients
-        optimizer.step()                # update weights
+        optimizer.step()                # update weights using gradients
 
-        total_loss += loss.item() * images.size(0)
+        total_loss += loss.item() * images.size(0) # loss is the average over patch, multiply by batch size to get total loss for this batch
     return total_loss / len(train_ds)
 
 def evaluate():
@@ -124,8 +124,8 @@ def evaluate():
             all_preds.extend(preds.cpu().tolist())
             all_labels.extend(labels.cpu().tolist())
     f1 = f1_score(all_labels, all_preds, zero_division=0)  # 0 if never predicts young
-    precision = precision_score(all_labels, all_preds, zero_division=0) # of predicted young, how many were actually young
-    recall = recall_score(all_labels, all_preds, zero_division=0) # of real YOUNG, how many were found
+    precision = precision_score(all_labels, all_preds, zero_division=0) # of predicted young, how many were actually young (low precision = many false alarms)
+    recall = recall_score(all_labels, all_preds, zero_division=0)       # of real YOUNG, how many were found (low recall = many missed)
     return total_loss / len(val_ds), f1, precision, recall
 
 runs_dir = ROOT / config["paths"]["runs"]
@@ -154,7 +154,7 @@ with open(runs_dir / f"{tag}_log.csv", "w", newline="") as f:
         pct = 100 * epoch / cfg["epochs"]
 
         print(f"epoch {epoch}/{cfg['epochs']} ({pct:.0f}%) | "
-              f"train {train_loss:.4f}  val {val_loss:.4f}  F1 {val_f1:.3f} | "
+              f"train {train_loss:.4f}  val {val_loss:.4f} | "
               f"F1 {val_f1:.3f}  P {val_p:.3f}  R {val_r:.3f} | "
               f"{epoch_time:.0f}s this epoch, {total_time/60:.1f} min total")
         writer.writerow([epoch, train_loss, val_loss, val_f1, val_p, val_r, round(epoch_time, 1)])
@@ -166,6 +166,6 @@ with open(runs_dir / f"{tag}_log.csv", "w", newline="") as f:
         if val_f1 > best_f1:
             best_f1 = val_f1
             best_epoch = epoch
-            torch.save(model.state_dict(), runs_dir / f"{tag}_best.pt")
+            torch.save(model.state_dict(), runs_dir / f"{tag}_best.pt") #state_dict is a dictionary of all weights in model, .pt holds the best epoch
 
 print(f"best val F1: {best_f1:.3f} (epoch {best_epoch})")
