@@ -14,7 +14,7 @@ Things to agree on as a team before everyone starts building, so we don't find o
 
 ## Data
 
-- [ ] Everyone has run `fetch_data.py` and `make_split.py` and sees fingerprint `673e0097`.
+- [ ] Everyone has run `fetch_data.py` and `make_split.py` and sees fingerprint `9172c7a9` (4879 images; one corrupt file excluded, see `docs/DATA_SETUP.md`).
 - [ ] Nobody edits `configs/split.toml`. Alternate splits are only for checking that an improvement is real.
 - [ ] Competition data stays local: don't upload images or the CSVs to AI tools or other services, and check Kaggle's competition rules on data use.
 
