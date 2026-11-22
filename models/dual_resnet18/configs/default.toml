@@ -1,0 +1,55 @@
+# Dual-head ResNet18 (age + antler from one forward pass). One file per experiment: copy this file, rename it (will be used as log name),
+# change one parameter, and run with the copy so its settings stay on record. Paths are relative to the repo root.
+# Run name = this file's name (default.toml -> 'default'): outputs go to <runs>/default_best.pt,
+# <runs>/default_val_predictions.csv, etc. Name copies after what they change, e.g. no_month.toml.
+
+[paths]
+images = "data/raw/images"
+split = "data/processed/split_tagged.csv"  # scripts/make_split.py + scripts/tag_images.py
+runs = "logs/runs/dual_resnet18"   # one folder per model (docs/CONTRIBUTING.md)
+
+[data]
+seed = 42
+image_size = 224
+crop_method = "square"   # "square" | "letterbox" (stub)
+margin = 0.15            # context around the box, as a fraction of its longer side
+use_month = true         # false feeds [0, 0] for every image
+gt_jitter = true         # train only: randomly shift/scale the GT box before cropping for robustness
+jitter_shift = 0.10
+jitter_scale = 0.15
+
+[augment]                # train only, applied after cropping. No random crop (due already cropping bboxes) and no saturation change (doesnt change night images, day not camera trap-like)
+translate = 0.05
+scale = [0.95, 1.05]
+jitter = 0.2             # brightness/contrast
+grayscale_p = 0.3        # fraction of crops turned gray (from resnet18 run4; ~53% of images are night IR)
+
+[model]                  # DualResNet18 constructor arguments
+n_age = 2
+n_antler = 2
+month_dim = 2
+month_hidden = 16
+pretrained = true
+
+[train]                  # read by your train.py (handoff defaults)
+batch_size = 64
+epochs = 30
+optimizer = "adamw"
+lr_heads = 0.001         # age/antler heads + month MLP (higher learning rate to adjust)
+lr_backbone = 0.0001     # slower learning rate for pretrained Resnet18
+weight_decay = 0.0001
+schedule = "cosine"
+lam = 1.0                # L = L_age + lam * L_antler
+class_weights = true     # inverse frequency per head, from DualDeerDataset.class_counts()
+freeze_epochs = 3        # heads-only warmup if the model has freeze_backbone()
+early_stop_patience = 5  # on mean val macro-F1 across the two heads
+
+[detect]                 # box source for images WITHOUT a GT row (unseen images)
+fallback = "megadetector"  # "megadetector" | "full_frame"
+md_model = "MDV5A"
+md_threshold = 0.2       # not tuned: no labeled data without GT boxes to tune it on
+
+[inference]
+batch_size = 64
+antler_conf_threshold = 0.6  # below this, antler status is "undetermined"
+review_threshold = 0.5       # removed impossible-cell mass above this flags needs_review

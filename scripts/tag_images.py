@@ -1,9 +1,9 @@
-"""Tag each image with day/night (from color saturation) and deer visibility (from bbox extent).
+"""Tag each image with day/night (from color saturation), deer visibility (from bbox extent), and resolution.
 
 Input:  data/raw/images/ + data/raw/Snapshot_WI-Oh_Deer_data-v2.csv (from fetch_data.py)
         data/processed/split.csv (from make_split.py)
 Output: data/processed/tags.csv, one row per image:
-        filename, mean_saturation, day_night, bbox_area, bbox_size, bbox_touches_edge
+        filename, mean_saturation, day_night, width, height, low_res, bbox_area, bbox_size, bbox_touches_edge
         data/processed/split_tagged.csv: split.csv with the tag columns appended (corrupt
         images are already dropped from split.csv, so they are absent here too)
 
@@ -16,6 +16,10 @@ Visibility: bbox_area is the fraction of the frame covered by the box (bbox colu
 normalized to 0-1). bbox_size splits it into balanced tertiles (small/medium/large), and
 bbox_touches_edge flags deer likely cut off by the frame. Raw numbers are kept next to the
 labels so thresholds can change without re-reading images.
+
+Resolution: width/height come from the JPEG header. On the v2 data, 4853 images are 1600x1200 and
+27 are 800x600 (same 4:3 aspect, so resizing does not distort them, but they carry less detail).
+low_res flags any image narrower than FULL_RES_WIDTH.
 
 Regenerate (after make_split.py):
     uv run scripts/tag_images.py
@@ -43,6 +47,7 @@ DRAFT_SCALE = 4
 # A box edge within 1% of the frame border counts as touching it
 EDGE_MARGIN = 0.01
 SIZE_LABELS = ['small', 'medium', 'large']
+FULL_RES_WIDTH = 1600
 
 
 def parse_args() -> argparse.Namespace:
@@ -71,6 +76,19 @@ def mean_saturation(path: Path) -> float:
         img.draft('RGB', (img.width // DRAFT_SCALE, img.height // DRAFT_SCALE))
         saturation = np.asarray(img.convert('HSV'))[:, :, 1]
     return float(saturation.mean())
+
+
+def image_size(path: Path) -> tuple[int, int]:
+    """Read an image's pixel dimensions from its header without decoding pixels.
+
+    Args:
+        path: Path to a JPEG image.
+
+    Returns:
+        (width, height) in pixels.
+    """
+    with Image.open(path) as img:
+        return img.size
 
 
 def day_night(mean_s: float, threshold: float) -> str:
@@ -120,19 +138,26 @@ def main() -> None:
 
     saturations = []
     for i, filename in enumerate(labels['filename'], start=1):
-        mean_s = np.nan if filename in CORRUPT_FILES else mean_saturation(path=IMAGES_DIR / filename)
-        saturations.append({'filename': filename, 'mean_saturation': round(mean_s, 3)})
+        path = IMAGES_DIR / filename
+        mean_s = np.nan if filename in CORRUPT_FILES else mean_saturation(path=path)
+        width, height = image_size(path=path)
+        saturations.append(
+            {'filename': filename, 'mean_saturation': round(mean_s, 3), 'width': width, 'height': height}
+        )
         if i % 500 == 0:
             print(f"{i}/{len(labels)} images read")
 
     tags = pd.DataFrame(saturations)
     tags['day_night'] = [day_night(mean_s=s, threshold=args.night_threshold) for s in tags['mean_saturation']]
+    tags['low_res'] = tags['width'] < FULL_RES_WIDTH
+    tags = tags[['filename', 'mean_saturation', 'day_night', 'width', 'height', 'low_res']]
     tags = tags.merge(bbox_tags(labels=labels), on='filename')
 
     TAGS_CSV.parent.mkdir(parents=True, exist_ok=True)
     tags.to_csv(TAGS_CSV, index=False)
     print(f"Wrote {len(tags)} rows to {TAGS_CSV}")
     print(tags['day_night'].value_counts().to_string())
+    print(tags.groupby(['width', 'height']).size().to_string())
     print(pd.crosstab(tags['bbox_size'], tags['bbox_touches_edge']).to_string())
 
     split = pd.read_csv(SPLIT_CSV)
